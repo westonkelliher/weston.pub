@@ -1,0 +1,3 @@
+* add pub key that is configured with pgp
+  - include actual key on website + the pgp command to get it
+* add "projects" from page directory with tabs for project categories
