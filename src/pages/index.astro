@@ -1,29 +1,251 @@
 ---
-// src/pages/index.astro
+import gpgArmoredRaw from '../../public/gpg.asc?raw';
+import { projectsInCategory } from '../data/projects';
+
+const gpgArmored = gpgArmoredRaw.trimEnd();
+
+const games = projectsInCategory('games');
+const platform = projectsInCategory('platform');
+
+/** Must match the key in public/gpg.asc — update when the on-disk key changes. */
+const GPG_FINGERPRINT = 'B137 3462 1DCE D78D DC5D FEBE 7098 8CF8 636F 3993';
+const SITE_ORIGIN = 'https://weston.pub';
+const importCmd = `curl -fsSL ${SITE_ORIGIN}/gpg.asc | gpg --import`;
 ---
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>weston.pub</title>
     <style>
+      :root {
+        --bg: #0a0a0a;
+        --surface: #141414;
+        --border: #2a2a2a;
+        --text: #e8e8e8;
+        --muted: #9a9a9a;
+        --accent: #7eb8da;
+        --accent-dim: #5a9aba;
+      }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
         min-height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+      }
+      header.site-title {
+        margin-bottom: 2.25rem;
+      }
+      header.site-title h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      header.site-title p {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      section {
+        margin-bottom: 2.75rem;
+      }
+      section h2 {
+        margin: 0 0 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .key-block {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.1rem;
+      }
+      .fingerprint {
+        font-family: ui-monospace, 'Cascadia Code', monospace;
+        font-size: 0.85rem;
+        word-break: break-all;
+        margin: 0 0 1rem;
+        color: var(--text);
+      }
+      .cmd-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin-bottom: 0.35rem;
+      }
+      pre.cmd {
+        margin: 0 0 1rem;
+        padding: 0.65rem 0.75rem;
+        background: var(--bg);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+      }
+      .btn-row {
         display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      button,
+      a.btn {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-family: system-ui, sans-serif;
-        background: #0a0a0a;
-        color: #e0e0e0;
+        padding: 0.45rem 0.85rem;
+        font-size: 0.85rem;
+        font-family: inherit;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
       }
-      h1 {
-        font-size: 2rem;
-        font-weight: 300;
+      button:hover,
+      a.btn:hover {
+        border-color: var(--accent-dim);
+        color: var(--accent);
+      }
+      button.copied {
+        border-color: #3d6b4a;
+        color: #8fd4a0;
+      }
+      .projects h3 {
+        margin: 1.25rem 0 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .projects h3:first-of-type {
+        margin-top: 0;
+      }
+      .projects ul {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+      .projects li {
+        margin-bottom: 0.35rem;
+      }
+      .projects a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .projects a:hover {
+        text-decoration: underline;
+      }
+      .placeholder {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .about p {
+        margin: 0 0 0.75rem;
+      }
+      .about p:last-child {
+        margin-bottom: 0;
       }
     </style>
   </head>
   <body>
-    <h1>weston.pub — coming soon</h1>
+    <div class="wrap">
+      <header class="site-title">
+        <h1>weston.pub</h1>
+        <p>Weston Kelliher</p>
+      </header>
+
+      <section class="gpg" aria-labelledby="gpg-heading">
+        <h2 id="gpg-heading">OpenPGP public key</h2>
+        <div class="key-block">
+          <p class="fingerprint">{GPG_FINGERPRINT}</p>
+          <div class="cmd-label">Import with bash</div>
+          <pre class="cmd" id="import-cmd">{importCmd}</pre>
+          <div class="btn-row">
+            <button type="button" id="copy-key" aria-label="Copy full public key to clipboard">
+              Copy full key
+            </button>
+            <a class="btn" href="/gpg.asc" download="weston-pub.gpg.asc">Download .asc</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="projects" aria-labelledby="projects-heading">
+        <h2 id="projects-heading">Projects</h2>
+
+        <h3>Games</h3>
+        <ul>
+          {
+            games.map((p) => (
+              <li>
+                <a href={`/projects/${p.slug}`}>{p.title}</a> — {p.summary}
+              </li>
+            ))
+          }
+        </ul>
+
+        <h3>Platform, graphics &amp; tooling</h3>
+        <ul>
+          {
+            platform.map((p) => (
+              <li>
+                <a href={`/projects/${p.slug}`}>{p.slug === 'rqn' ? 'rqn (Requin)' : p.title}</a> — {p.summary}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="about" aria-labelledby="about-heading">
+        <h2 id="about-heading">About</h2>
+        <p>
+          I work on games and systems software—Rust and Godot games (including procedural worlds and console-focused
+          multiplayer), a homebrew Linux game-console platform (Requin / GameNite), WebGL graphics experiments, and
+          shell/editor tooling.
+        </p>
+        <p>
+          This domain hosts each project on its own page (demos, builds, write-ups — placeholders link out to GitHub for
+          now). OpenPGP key above for verification. Served with Astro on Cloudflare Workers.
+        </p>
+      </section>
+    </div>
+
+    <script
+      define:vars={{
+        gpgArmored,
+      }}
+    >
+      const copyBtn = document.getElementById('copy-key');
+      copyBtn?.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(gpgArmored);
+          copyBtn.textContent = 'Copied';
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy full key';
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        } catch {
+          copyBtn.textContent = 'Copy failed';
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy full key';
+          }, 2000);
+        }
+      });
+    </script>
   </body>
 </html>

@@ -1,0 +1,31 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import { projects, type Project } from '../../data/projects';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<ProjectLayout title={project.title}>
+  <h1>{project.title}</h1>
+  <p class="notice" role="status">
+    <strong>Placeholder.</strong> This URL will host the project itself (builds, demos, docs). For now only source and
+    metadata live on GitHub — link below.
+  </p>
+  <p class="summary">{project.summary}</p>
+  <p>
+    <a class="gh" href={project.githubUrl} target="_blank" rel="noopener noreferrer">View on GitHub</a>
+  </p>
+</ProjectLayout>
