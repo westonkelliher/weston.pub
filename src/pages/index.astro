@@ -1,11 +1,7 @@
 ---
 import gpgArmoredRaw from '../../public/gpg.asc?raw';
-import { projectsInCategory } from '../data/projects';
 
 const gpgArmored = gpgArmoredRaw.trimEnd();
-
-const games = projectsInCategory('games');
-const platform = projectsInCategory('platform');
 
 /** Must match the key in public/gpg.asc — update when the on-disk key changes. */
 const GPG_FINGERPRINT = 'B137 3462 1DCE D78D DC5D FEBE 7098 8CF8 636F 3993';
@@ -127,29 +123,6 @@ const importCmd = `curl -fsSL ${SITE_ORIGIN}/gpg.asc | gpg --import`;
         border-color: #3d6b4a;
         color: #8fd4a0;
       }
-      .projects h3 {
-        margin: 1.25rem 0 0.5rem;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .projects h3:first-of-type {
-        margin-top: 0;
-      }
-      .projects ul {
-        margin: 0;
-        padding-left: 1.2rem;
-      }
-      .projects li {
-        margin-bottom: 0.35rem;
-      }
-      .projects a {
-        color: var(--accent);
-        text-decoration: none;
-      }
-      .projects a:hover {
-        text-decoration: underline;
-      }
       .placeholder {
         color: var(--muted);
         font-style: italic;
@@ -186,40 +159,15 @@ const importCmd = `curl -fsSL ${SITE_ORIGIN}/gpg.asc | gpg --import`;
 
       <section class="projects" aria-labelledby="projects-heading">
         <h2 id="projects-heading">Projects</h2>
-
-        <h3>Games</h3>
-        <ul>
-          {
-            games.map((p) => (
-              <li>
-                <a href={`/projects/${p.slug}`}>{p.title}</a> — {p.summary}
-              </li>
-            ))
-          }
-        </ul>
-
-        <h3>Platform, graphics &amp; tooling</h3>
-        <ul>
-          {
-            platform.map((p) => (
-              <li>
-                <a href={`/projects/${p.slug}`}>{p.slug === 'rqn' ? 'rqn (Requin)' : p.title}</a> — {p.summary}
-              </li>
-            ))
-          }
-        </ul>
+        <p class="placeholder">Coming soon</p>
       </section>
 
       <section class="about" aria-labelledby="about-heading">
         <h2 id="about-heading">About</h2>
         <p>
-          I work on games and systems software—Rust and Godot games (including procedural worlds and console-focused
-          multiplayer), a homebrew Linux game-console platform (Requin / GameNite), WebGL graphics experiments, and
-          shell/editor tooling.
-        </p>
-        <p>
-          This domain hosts each project on its own page (demos, builds, write-ups — placeholders link out to GitHub for
-          now). OpenPGP key above for verification. Served with Astro on Cloudflare Workers.
+          I'm a developer working on AI tooling and systems software (plus game
+	  development on the side). This website is to host my public key and showcase
+	  projects.
         </p>
       </section>
     </div>
