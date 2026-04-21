@@ -9,5 +9,11 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "CLIP_KV",
+			"id": "88ca493bc55946eb98877e0ad07b68cd"
+		}
+	]
 }

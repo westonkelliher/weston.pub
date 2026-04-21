@@ -1,0 +1,132 @@
+---
+import { env } from 'cloudflare:workers';
+export const prerender = false;
+
+const cfEnv = env as any;
+const token = cfEnv.CLIP_TOKEN as string;
+const kv = cfEnv.CLIP_KV as KVNamespace;
+
+const cookie = Astro.request.headers.get('Cookie') || '';
+const match = cookie.match(/(?:^|;\s*)clip_token=([^\s;]+)/);
+const authed = !!match && match[1] === token;
+
+const url = new URL(Astro.request.url);
+
+if (!authed) {
+  const qToken = url.searchParams.get('token');
+  if (qToken === token) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Set-Cookie': `clip_token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000`,
+        Location: '/clip',
+      },
+    });
+  }
+}
+
+if (!authed) {
+  return new Response('Unauthorized. Append ?token=YOUR_TOKEN to log in.', {
+    status: 401,
+    headers: { 'Content-Type': 'text/plain' },
+  });
+}
+
+let current: { content: string; type: string; timestamp: number } | null = null;
+const raw = await kv.get('latest');
+if (raw) current = JSON.parse(raw);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>clip — weston.pub</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --surface: #141414;
+        --border: #2a2a2a;
+        --text: #e8e8e8;
+        --muted: #9a9a9a;
+        --accent: #7eb8da;
+      }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--bg); color: var(--text);
+        min-height: 100dvh; padding: 1.5rem 1rem;
+      }
+      .wrap { max-width: 36rem; margin: 0 auto; }
+      h1 { font-size: 1.25rem; font-weight: 500; margin-bottom: 1.25rem; }
+      textarea {
+        width: 100%; min-height: 8rem; padding: 0.75rem;
+        background: var(--surface); color: var(--text);
+        border: 1px solid var(--border); border-radius: 8px;
+        font-family: ui-monospace, monospace; font-size: 0.9rem;
+        resize: vertical;
+      }
+      .btn-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+      button {
+        padding: 0.5rem 1rem; font-size: 0.85rem;
+        background: var(--surface); color: var(--text);
+        border: 1px solid var(--border); border-radius: 6px;
+        cursor: pointer; font-family: inherit;
+      }
+      button:hover { border-color: var(--accent); color: var(--accent); }
+      .status { margin-top: 0.75rem; font-size: 0.8rem; color: var(--muted); min-height: 1.2em; }
+      .current { margin-top: 1.5rem; }
+      .current h2 {
+        font-size: 0.7rem; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem;
+      }
+      pre.clip-content {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 0.75rem;
+        font-size: 0.85rem; white-space: pre-wrap; word-break: break-word;
+        max-height: 20rem; overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>clip</h1>
+      <textarea id="input" placeholder="Paste or type text here…"></textarea>
+      <div class="btn-row">
+        <button id="send">Send</button>
+        <button id="refresh">Refresh</button>
+      </div>
+      <div class="status" id="status"></div>
+      {current && (
+        <div class="current">
+          <h2>Current clip</h2>
+          <pre class="clip-content" id="current">{current.content}</pre>
+        </div>
+      )}
+    </div>
+    <script>
+      const input = document.getElementById('input') as HTMLTextAreaElement;
+      const status = document.getElementById('status')!;
+
+      document.getElementById('send')!.addEventListener('click', async () => {
+        const text = input.value.trim();
+        if (!text) return;
+        status.textContent = 'Sending…';
+        const res = await fetch('/api/clip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: text }),
+        });
+        if (res.ok) {
+          status.textContent = 'Sent!';
+          input.value = '';
+          setTimeout(() => location.reload(), 500);
+        } else {
+          status.textContent = `Error: ${res.status}`;
+        }
+      });
+
+      document.getElementById('refresh')!.addEventListener('click', () => location.reload());
+    </script>
+  </body>
+</html>
