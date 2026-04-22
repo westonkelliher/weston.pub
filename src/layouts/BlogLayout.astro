@@ -1,0 +1,100 @@
+---
+interface Props {
+  title: string;
+  date: string;
+}
+const { title, date } = Astro.props;
+const pageTitle = `${title} — weston.pub`;
+const displayDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{pageTitle}</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --surface: #141414;
+        --border: #2a2a2a;
+        --text: #e8e8e8;
+        --muted: #9a9a9a;
+        --accent: #7eb8da;
+        --accent-dim: #5a9aba;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+      }
+      nav.back {
+        margin-bottom: 1.5rem;
+      }
+      nav.back a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      nav.back a:hover {
+        color: var(--accent);
+      }
+      article h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.5rem;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+      }
+      .date {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+      }
+      article h2 {
+        margin: 2rem 0 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+      article p {
+        margin: 0 0 1rem;
+        color: var(--text);
+      }
+      article ol, article ul {
+        margin: 0 0 1rem;
+        padding-left: 1.5rem;
+      }
+      article li {
+        margin-bottom: 0.5rem;
+      }
+      .placeholder {
+        color: var(--muted);
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="back" aria-label="Site">
+        <a href="/blog">← blog</a>
+      </nav>
+      <article>
+        <h1>{title}</h1>
+        <div class="date">{displayDate}</div>
+        <slot />
+      </article>
+    </div>
+  </body>
+</html>
